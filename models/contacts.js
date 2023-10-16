@@ -1,75 +1,61 @@
-const fs = require("fs").promises;
-const path = require("path");
-const { nanoid } = require("nanoid");
+const { Schema, model } = require("mongoose");
+const Joi = require("joi");
+const { handleMongooseError } = require("../middlewares");
 
-const contactsPath = path.join(__dirname, "./", "contacts.json");
+const contactSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Set name for contact"],
+    },
+    email: {
+      type: String,
+    },
+    phone: {
+      type: String,
+    },
+    favorite: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { versionKey: false, timestamps: true }
+);
 
-async function listContacts() {
-  const allContacts = await fs.readFile(contactsPath);
+contactSchema.post("save", handleMongooseError);
 
-  return JSON.parse(allContacts);
-}
+const addSchema = Joi.object({
+  name: Joi.string().required().messages({
+    "any.required": `missing required name field`,
+  }),
+  email: Joi.string()
+    .email({
+      minDomainSegments: 2,
+    })
+    .required()
+    .messages({
+      "any.required": `missing required email field`,
+    }),
+  phone: Joi.string().required().messages({
+    "any.required": `missing required phone field`,
+  }),
+  favorite: Joi.boolean(),
+});
 
-async function getContactById(contactId) {
-  const allContacts = await listContacts();
-  const contact = allContacts.find((item) => item.id === contactId);
+const favoriteSchema = Joi.object({
+  favorite: Joi.boolean().required().messages({
+    "any.required": `missing field favorite`,
+  }),
+});
 
-  return contact || null;
-}
-
-async function removeContact(contactId) {
-  const allContacts = await listContacts();
-
-  const contactIndex = allContacts.findIndex((item) => item.id === contactId);
-
-  if (contactIndex !== -1) {
-    const deletedContact = allContacts.splice(contactIndex, 1);
-
-    await fs.writeFile(contactsPath, JSON.stringify(allContacts, null, 2));
-
-    return deletedContact[0];
-  }
-  return null;
-}
-
-async function addContact(data) {
-  const newContact = {
-    id: nanoid(),
-    ...data,
-  };
-
-  const allContacts = await listContacts();
-  allContacts.push(newContact);
-
-  await fs.writeFile(contactsPath, JSON.stringify(allContacts, null, 2));
-
-  return newContact;
-}
-
-async function updateById(id, data) {
-  const allContacts = await listContacts();
-
-  const index = allContacts.findIndex((item) => item.id === id);
-  if (index === -1) return null;
-
-  /* ---------- for third hw - patch method
- 
- const contactToUpdate = allContacts[index];
-
-  allContacts[index] = { ...contactToUpdate, id, ...data };
-  */
-  allContacts[index] = { id, ...data };
-  await fs.writeFile(contactsPath, JSON.stringify(allContacts, null, 2));
-
-  return allContacts[index];
-}
-
-module.exports = {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateById,
+const schema = {
+  addSchema,
+  favoriteSchema,
 };
 
-listContacts();
+const Contact = model("contact", contactSchema);
+
+module.exports = {
+  Contact,
+  schema,
+};
