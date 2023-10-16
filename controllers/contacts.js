@@ -15,7 +15,6 @@ async function getAll(req, res) {
 async function getById(req, res) {
   const { contactId } = req.params;
   const result = await getContactById(contactId);
-  console.log("getById -> result:", result);
 
   if (!result) {
     throw HttpError(404, "Not found");
@@ -46,15 +45,11 @@ async function update(req, res) {
   const { contactId } = req.params;
   const result = await updateById(contactId, req.body);
 
-  if (Object.keys(req.body).length === 0) {
-    throw HttpError(400, "missing fields");
-  }
-
   if (!result) {
     throw HttpError(404, "Not found");
   }
 
-  res.status(201).json(result);
+  res.status(200).json(result);
 }
 
 module.exports = {
