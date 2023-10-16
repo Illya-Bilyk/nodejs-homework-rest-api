@@ -52,13 +52,9 @@ async function updateById(id, data) {
   const index = allContacts.findIndex((item) => item.id === id);
   if (index === -1) return null;
 
-  /* ---------- for third hw - patch method
- 
- const contactToUpdate = allContacts[index];
+  const contactToUpdate = allContacts[index];
 
   allContacts[index] = { ...contactToUpdate, id, ...data };
-  */
-  allContacts[index] = { id, ...data };
   await fs.writeFile(contactsPath, JSON.stringify(allContacts, null, 2));
 
   return allContacts[index];
