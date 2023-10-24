@@ -7,6 +7,14 @@ const ctrl = require("../../controllers/auth");
 const router = express.Router();
 
 router.post("/register", validateBody(schema.signUpSchema), ctrl.signUp);
+
+router.get("/verify/:verificationToken", ctrl.verifyEmail);
+router.post(
+  "/verify",
+  validateBody(schema.emailSchema),
+  ctrl.resendVerificationEmail
+);
+
 router.post("/login", validateBody(schema.signInSchema), ctrl.signIn);
 router.get("/current", verify, ctrl.getCurrent);
 router.post("/logout", verify, ctrl.logout);
